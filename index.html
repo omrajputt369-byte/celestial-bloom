@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Celestial Bloom - Interactive WebGL Flowers</title>
+  <meta name="description" content="An interactive WebGL flower garden with night gradients and celestial blooms." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+  <div class="container">
+    <canvas id="canvas"></canvas>
+    <div class="clean-btn-container">
+      <button class="clean-btn" id="cleanBtn">Clear Garden</button>
+    </div>
+  </div>
+
+  <div class="name">Click To Add Flowers</div>
+
+  <script type="x-shader/x-fragment" id="fragmentShader">
+#define PI 3.14159265359
+
+uniform float u_ratio;
+uniform vec2 u_cursor;
+uniform float u_stop_time;
+uniform float u_clean;
+uniform vec2 u_stop_randomizer;
+uniform sampler2D u_texture;
+varying vec2 vUv;
+
+vec3 mod289(vec3 x) { return x - floor(x * (1.0/289.0))*289.0; }
+vec2 mod289(vec2 x) { return x - floor(x * (1.0/289.0))*289.0; }
+vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+float snoise(vec2 v){
+  const vec4 C = vec4(
+    0.211324865405187,
+    0.366025403784439,
+    -0.577350269189626,
+    0.024390243902439
+  );
+  vec2 i = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1., 0.) : vec2(0., 1.);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod289(i);
+  vec3 p = permute(
+    permute(i.y + vec3(0., i1.y, 1.))
+    + i.x + vec3(0., i1.x, 1.)
+  );
+  vec3 m = max(
+    0.5 - vec3(
+      dot(x0, x0),
+      dot(x12.xy, x12.xy),
+      dot(x12.zw, x12.zw)
+    ),
+    0.
+  );
+  m = m*m;
+  m = m*m;
+  vec3 x = 2.*fract(p * C.www) - 1.;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+  vec3 g;
+  g.x = a0.x * x0.x + h.x * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.*dot(m,g);
+}
+
+float get_flower_shape(vec2 _p, float _pet_n, float _angle, float _outline){
+  _angle *= 3.;
+  _p = vec2(_p.x*cos(_angle)-_p.y*sin(_angle),
+            _p.x*sin(_angle)+_p.y*cos(_angle));
+  float a=atan(_p.y,_p.x);
+  float fs=pow(abs(sin(a*_pet_n)), .4)+.25;
+  vec2 r=vec2(.03,.1);
+  float S=r.x+u_stop_randomizer.x*r.y;
+  float fr=pow(length(_p)/S,2.);
+  fr-=.1*sin(8.*a);
+  fr=max(.1,fr);
+  fr+=smoothstep(0.,.03,-_p.y+.2*abs(_p.x));
+  float gt=step(.25,u_stop_time)*pow(u_stop_time,.3);
+  float f=1.-smoothstep(0.,fs,_outline*fr/gt);
+  f*=(1.-step(1.,gt));
+  return f;
+}
+
+float get_stem_shape(vec2 _p, vec2 _uv, float _w, float _angle){
+  _w=max(.004,_w);
+  float xo=_p.y*sin(_angle)*pow(3.*_uv.y,2.);
+  _p.x-=xo;
+  float n=.5*snoise(2.*_uv*u_stop_randomizer.x);
+  n*=pow(dot(_p.y,_p.y),.6);
+  n*=pow(dot(_uv.y,_uv.y),.3);
+  _p.x+=n;
+  float l=smoothstep(-_w,0.,_p.x);
+  float r=1.-smoothstep(0.,_w,_p.x);
+  float s=l*r;
+  float gt=1.-smoothstep(0.,.2,u_stop_time);
+  float top=smoothstep(0.,pow(gt,.5),.03-_p.y);
+  s*=top;
+  s*=(1.-step(.17,u_stop_time));
+  return s;
+}
+
+void main(){
+  vec3 base = texture2D(u_texture, vUv).xyz;
+  vec2 uv = vUv; uv.x *= u_ratio;
+  vec2 cursor = vUv - u_cursor.xy; cursor.x *= u_ratio;
+  
+  // Premium Flower Color Palette
+  vec3 sc = vec3(0.1 + u_stop_randomizer.x * 0.4, 0.5 + u_stop_randomizer.y * 0.3, 0.2); // Stem greens
+  vec3 fc = mix(vec3(0.8, 0.2, 0.9), vec3(0.2, 0.6, 1.0), u_stop_randomizer.y); // Purple to Blue
+  fc = mix(fc, vec3(1.0, 0.4, 0.3), u_stop_randomizer.x); // Add warm coral tones
+  
+  float angle = 0.5 * (u_stop_randomizer.x - 0.5);
+  
+  // Masking logic: Clear the area where the new flower will be drawn
+  float sm_mask = 1.0 - get_stem_shape(cursor, uv, 0.004, angle);
+  sm_mask -= get_stem_shape(cursor + vec2(0.0, 0.15 + 0.3 * u_stop_randomizer.x), uv, 0.004, angle);
+  
+  float bn = 3.0 + floor(u_stop_randomizer.x * 4.0);
+  float offset = -(2.0 * step(0.0, angle) - 1.0) * 0.15 * u_stop_time;
+  float fbm = 1.0 - get_flower_shape(cursor, bn, angle + offset, 1.6);
+  
+  float fn = 4.0 + floor(u_stop_randomizer.y * 3.0);
+  float ffm = 1.0 - get_flower_shape(cursor, fn, angle, 0.95);
+
+  vec3 col = base;
+  // Apply masks to clear existing canvas content under the new flower
+  col *= clamp(sm_mask, 0.0, 1.0);
+  col *= clamp(fbm, 0.0, 1.0);
+  col *= clamp(ffm, 0.0, 1.0);
+
+  // Draw new frame's elements
+  float st = get_stem_shape(cursor, uv, 0.002, angle);
+  st += get_stem_shape(cursor + vec2(0.0, 0.15 + 0.3 * u_stop_randomizer.x), uv, 0.0015, angle);
+  col += st * sc;
+  
+  float fbs = get_flower_shape(cursor, bn, angle + offset, 1.4);
+  col += fbs * fc;
+  
+  float ffs = get_flower_shape(cursor, fn, angle, 0.9);
+  col += ffs * (fc * 1.2); // Slightly brighter core
+  
+  // Depth / Petal shadowing
+  col.r *= 1.0 - (0.4 * fbs * ffs);
+  col.b *= 1.0 - (0.6 * fbs * ffs);
+  
+  col *= u_clean;
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+  <script type="x-shader/x-vertex" id="vertexShader">
+varying vec2 vUv;
+void main(){
+  vUv=uv;
+  gl_Position=vec4(position,1.);
+}
+</script>
+
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
