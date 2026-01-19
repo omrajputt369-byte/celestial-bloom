@@ -15,6 +15,7 @@ An interactive WebGL garden of celestial flowers that bloom in response to your 
 - 🌌 **Celestial Gradients**: Vibrant magenta, purple, and celestial blue tones inspired by the night sky.
 - 📱 **Interactive Experience**: Click or tap anywhere to "grow" a new flower instantly.
 - 🧼 **Clean Interaction**: A smooth "Clear Garden" feature with glassmorphism styling to reset your canvas.
+- 🎵 **Immersive Audio**: Ambient celestial music that begins playing as your first flower blooms.
 
 ## Tech Stack
 
