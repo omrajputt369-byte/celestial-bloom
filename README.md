@@ -60,7 +60,7 @@
 
 <div align="center">
 
-*Curated with ❤️ by [OM](https://github.com/omrajputt369-byte)*
+*Curated with by [OM](https://github.com/omrajputt369-byte)*
 
 **[GitHub](https://github.com/omrajputt369-byte)** • **[Portfolio](#)** • **[Twitter](#)**
 
