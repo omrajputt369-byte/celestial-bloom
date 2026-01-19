@@ -34,4 +34,4 @@ An interactive WebGL garden of celestial flowers that bloom in response to your 
 
 ---
 
-Developed with ❤️ by [omrajputt369-byte](https://github.com/omrajputt369-byte)
+Developed  by [omrajputt369-byte](https://github.com/omrajputt369-byte)

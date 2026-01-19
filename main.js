@@ -5,6 +5,9 @@ const cleanBtn = document.querySelector(".clean-btn")
 const hint = document.querySelector(".name")   // NEW
 let firstClick = false                         // NEW
 
+const audio = new Audio("./music/Ronetts_-_Be_my_Baby_(mp3.pm).mp3")
+audio.loop = true
+
 const pointer = { x: 0.5, y: 0.5, clicked: false }
 
 let renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: true })
@@ -36,6 +39,7 @@ window.addEventListener("click", e => {
 
   if (!firstClick) {
     hint.style.display = "none"
+    audio.play().catch(e => console.error("Audio playback failed:", e))
     firstClick = true
   }
 })
@@ -48,6 +52,7 @@ window.addEventListener("touchstart", e => {
 
   if (!firstClick) {
     hint.style.display = "none"
+    audio.play().catch(e => console.error("Audio playback failed:", e))
     firstClick = true
   }
 })
