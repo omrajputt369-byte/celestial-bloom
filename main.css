@@ -106,22 +106,24 @@ canvas {
   }
 }
 
-/* Lyrics Styling */
+/* Lyrics Styling - Refined for Reels Feel */
 .lyrics-container {
   position: fixed;
-  bottom: 15%;
+  bottom: 12%;
+  /* Moved lower */
   left: 8%;
   color: #fff;
   font-family: var(--primary-font);
   font-size: 26px;
-  font-weight: 300;
-  line-height: 1.6;
+  font-weight: 600;
+  /* Bolder as per reference image */
+  line-height: 1.4;
   text-align: left;
   z-index: 10;
   pointer-events: none;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
   opacity: 0;
-  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
   transform: translateY(20px);
 }
 
@@ -132,4 +134,14 @@ canvas {
 
 .lyrics-container span {
   display: block;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: lyricIn 0.8s forwards ease-out;
+}
+
+@keyframes lyricIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
