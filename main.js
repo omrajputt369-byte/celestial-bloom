@@ -8,6 +8,40 @@ let firstClick = false                         // NEW
 const audio = new Audio("./music/Ronetts_-_Be_my_Baby_(mp3.pm).mp3")
 audio.loop = true
 
+const lyricsContainer = document.getElementById("lyrics-container")
+const lyricsData = [
+  { time: 0, text: "you know," },
+  { time: 1.5, text: "i will adore" },
+  { time: 3.5, text: "you 'til" },
+  { time: 5.5, text: "eternity (ah)" },
+  { time: 8.5, text: "so won't" },
+  { time: 10.5, text: "you please" },
+  { time: 12.5, text: "be my, be" },
+  { time: 14.5, text: "my baby" },
+  { time: 16.5, text: "be my little" }
+]
+
+function showLyrics() {
+  let currentLyricIndex = -1
+
+  const updateLyrics = () => {
+    const currentTime = audio.currentTime
+    const index = lyricsData.findLastIndex(l => currentTime >= l.time)
+
+    if (index !== currentLyricIndex && index !== -1) {
+      currentLyricIndex = index
+      lyricsContainer.classList.remove("active")
+
+      setTimeout(() => {
+        lyricsContainer.innerHTML = lyricsData[index].text.split("\n").map(line => `<span>${line}</span>`).join("")
+        lyricsContainer.classList.add("active")
+      }, 600)
+    }
+    requestAnimationFrame(updateLyrics)
+  }
+  updateLyrics()
+}
+
 const pointer = { x: 0.5, y: 0.5, clicked: false }
 
 let renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: true })
@@ -40,6 +74,7 @@ window.addEventListener("click", e => {
   if (!firstClick) {
     hint.style.display = "none"
     audio.play().catch(e => console.error("Audio playback failed:", e))
+    showLyrics()
     firstClick = true
   }
 })
@@ -53,6 +88,7 @@ window.addEventListener("touchstart", e => {
   if (!firstClick) {
     hint.style.display = "none"
     audio.play().catch(e => console.error("Audio playback failed:", e))
+    showLyrics()
     firstClick = true
   }
 })
